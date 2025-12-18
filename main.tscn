@@ -1,0 +1,302 @@
+[gd_scene load_steps=8 format=3 uid="uid://dvjo4qjbd65rh"]
+
+[ext_resource type="Script" uid="uid://cy164p0ph1arj" path="res://main.gd" id="1_h2yge"]
+[ext_resource type="FontFile" uid="uid://dy6ewshao51b7" path="res://fonts/Inconsolata-VariableFont_wdth,wght.ttf" id="2_1bvp3"]
+[ext_resource type="Shader" uid="uid://bokngy4tupyuw" path="res://main.gdshader" id="3_1bvp3"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_25r5j"]
+bg_color = Color(0, 0.2, 0, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 1, 0, 1)
+border_blend = true
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fjm81"]
+bg_color = Color(0, 0.33333334, 0, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 1, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7jp4h"]
+bg_color = Color(0, 0.26666668, 0, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 1, 0, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lquwl"]
+shader = ExtResource("3_1bvp3")
+shader_parameter/scanline_strength = 0.1330000063175
+shader_parameter/vignette_strength = 0.15
+shader_parameter/noise_strength = 0.030000001425
+shader_parameter/flicker_strength = 0.038000001805
+shader_parameter/chromatic_aberration = 0.002
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_h2yge")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0.050980393, 0, 1)
+
+[node name="TerminalDisplay" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -240.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="TerminalBackground" type="ColorRect" parent="TerminalDisplay"]
+layout_mode = 2
+color = Color(0, 0.05, 0, 1)
+
+[node name="ScrollContainer" type="ScrollContainer" parent="TerminalDisplay"]
+layout_mode = 2
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="TerminalLabel" type="Label" parent="TerminalDisplay/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0.2, 0, 1)
+theme_override_constants/line_spacing = 2
+theme_override_constants/outline_size = 2
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 18
+text = "INITIALIZING..."
+autowrap_mode = 3
+
+[node name="ControlPanel" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -224.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="ThrustControls" type="VBoxContainer" parent="ControlPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ThrustTitle" type="Label" parent="ControlPanel/ThrustControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 16
+text = "═══ THRUST ═══"
+horizontal_alignment = 1
+
+[node name="ThrustButtons" type="HBoxContainer" parent="ControlPanel/ThrustControls"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ThrustMinusButton" type="Button" parent="ControlPanel/ThrustControls/ThrustButtons"]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.53333336, 1, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 1, 0.53333336, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "-"
+
+[node name="ThrustPlusButton" type="Button" parent="ControlPanel/ThrustControls/ThrustButtons"]
+custom_minimum_size = Vector2(45, 45)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.53333336, 1, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 1, 0.53333336, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "+"
+
+[node name="ThrustLabel" type="Label" parent="ControlPanel/ThrustControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 16
+text = "THRUST: 0%"
+horizontal_alignment = 1
+
+[node name="RotationControls" type="VBoxContainer" parent="ControlPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RotationTitle" type="Label" parent="ControlPanel/RotationControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 16
+text = "═══ ROTATION ═══"
+horizontal_alignment = 1
+
+[node name="PitchLabel" type="Label" parent="ControlPanel/RotationControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 12
+text = "PITCH"
+horizontal_alignment = 1
+
+[node name="PitchControls" type="HBoxContainer" parent="ControlPanel/RotationControls"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PitchUpButton" type="Button" parent="ControlPanel/RotationControls/PitchControls"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.53333336, 1, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 1, 0.53333336, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "UP"
+
+[node name="PitchDownButton" type="Button" parent="ControlPanel/RotationControls/PitchControls"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.53333336, 1, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 1, 0.53333336, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "DOWN"
+
+[node name="YawLabel" type="Label" parent="ControlPanel/RotationControls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 12
+text = "YAW"
+horizontal_alignment = 1
+
+[node name="YawControls" type="HBoxContainer" parent="ControlPanel/RotationControls"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="YawLeftButton" type="Button" parent="ControlPanel/RotationControls/YawControls"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.53333336, 1, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 1, 0.53333336, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "LEFT"
+
+[node name="YawRightButton" type="Button" parent="ControlPanel/RotationControls/YawControls"]
+custom_minimum_size = Vector2(90, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.53333336, 1, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 1, 0.53333336, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "RIGHT"
+
+[node name="UtilityButtons" type="VBoxContainer" parent="ControlPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Spacer" type="Control" parent="ControlPanel/UtilityButtons"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ResetButton" type="Button" parent="ControlPanel/UtilityButtons"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.53333336, 1, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 1, 0.53333336, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "RESET [R]"
+
+[node name="KillVelocityButton" type="Button" parent="ControlPanel/UtilityButtons"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.33333334, 0, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.6666667, 0, 1)
+theme_override_colors/font_hover_color = Color(1, 0.53333336, 0, 1)
+theme_override_fonts/font = ExtResource("2_1bvp3")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_25r5j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fjm81")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7jp4h")
+text = "KILL VEL [X]"
+
+[node name="CRTEffect" type="CanvasLayer" parent="."]
+layer = 128
+follow_viewport_enabled = true
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="CRTEffect"]
+copy_mode = 2
+
+[node name="CRTOverlay" type="ColorRect" parent="CRTEffect"]
+material = SubResource("ShaderMaterial_lquwl")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
