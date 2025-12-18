@@ -22,7 +22,12 @@ var current_thrust_acceleration: float = 0.0
 
 ## Ship's orientation in 3D space using Godot's Basis system
 ## This tracks the ship's rotation without using transform
-var ship_basis: Basis = Basis.IDENTITY
+var ship_basis: Basis = Basis.IDENTITY.rotated(Vector3.UP, -TAU/4)
+
+## Separate tracking of pitch and yaw angles in radians
+## These are independent of basis to avoid interlinking
+var current_pitch_rad: float = 0.0
+var current_yaw_rad: float = 0.0
 
 ## Reference origin point (black hole or station at 0,0,0)
 const REFERENCE_ORIGIN: Vector3 = Vector3.ZERO
@@ -94,7 +99,7 @@ func apply_directional_thrust(direction: Vector3, thrust_percentage: float) -> v
 # ROTATION CONTROL
 # ============================================================================
 
-## Rotate the ship around its local axes
+## Rotate the ship around world axes to avoid interlinking
 ## @param pitch: Rotation around X axis (radians/sec) - nose up/down
 ## @param yaw: Rotation around Y axis (radians/sec) - nose left/right
 ## @param delta: Physics delta time
@@ -103,12 +108,14 @@ func rotate_ship(pitch: float, yaw: float, delta: float) -> void:
 	pitch = clamp(pitch, -MAX_ROTATION_RATE, MAX_ROTATION_RATE)
 	yaw = clamp(yaw, -MAX_ROTATION_RATE, MAX_ROTATION_RATE)
 
-	# Apply rotations around local axes using the current basis
-	# Order: pitch (X), then yaw (Y)
+	# Apply rotations around consistent world axes to avoid interlinking
+	# Pitch around world X axis (RIGHT), yaw around world Y axis (UP)
 	if abs(pitch) > 0.001:
-		ship_basis = ship_basis.rotated(ship_basis.x, pitch * delta)
+		ship_basis = ship_basis.rotated(Vector3.RIGHT, pitch * delta)
+		current_pitch_rad += pitch * delta
 	if abs(yaw) > 0.001:
-		ship_basis = ship_basis.rotated(ship_basis.y, yaw * delta)
+		ship_basis = ship_basis.rotated(Vector3.UP, yaw * delta)
+		current_yaw_rad += yaw * delta
 
 	# Orthonormalize to prevent floating point drift over time
 	ship_basis = ship_basis.orthonormalized()
@@ -139,23 +146,24 @@ func to_360_angle(angle: float) -> float:
 # BEARING CALCULATIONS
 # ============================================================================
 
-## Get pitch and yaw angles from the ship's forward vector
+## Get pitch and yaw angles from stored independent variables
 ## Returns angles in degrees for terminal display
 func get_bearing_angles() -> Dictionary:
-	var forward = get_forward_vector()
-	
-	# Calculate yaw (rotation around Y axis, horizontal angle)
-	# atan2(z, x) gives angle in XZ plane from +X axis
-	var yaw_rad = atan2(forward.z, forward.x)
-	var yaw_deg = rad_to_deg(yaw_rad)
-	
-	# Calculate pitch (rotation around X axis, vertical angle)
-	# asin(y) gives angle from XZ plane
-	var pitch_rad = asin(clamp(forward.y, -1.0, 1.0))
-	var pitch_deg = rad_to_deg(pitch_rad)
-	
+	# Normalize angles to -180 to +180 degrees range for consistency
+	var pitch_deg = fmod(rad_to_deg(current_pitch_rad), 360.0)
+	if pitch_deg > 180.0:
+		pitch_deg -= 360.0
+	elif pitch_deg < -180.0:
+		pitch_deg += 360.0
+
+	var yaw_deg = fmod(rad_to_deg(current_yaw_rad), 360.0)
+	if yaw_deg > 180.0:
+		yaw_deg -= 360.0
+	elif yaw_deg < -180.0:
+		yaw_deg += 360.0
+
 	return {
-		"pitch": pitch_deg,  # -90 to +90 degrees (converted to 0-360° for display)
+		"pitch": pitch_deg,  # -180 to +180 degrees (converted to 0-360° for display)
 		"yaw": yaw_deg,      # -180 to +180 degrees (converted to 0-360° for display)
 	}
 
@@ -253,7 +261,11 @@ func reset_ship() -> void:
 	ship_velocity = Vector3.ZERO
 	ship_acceleration = Vector3.ZERO
 	current_thrust_acceleration = 0.0
-	ship_basis = Basis.IDENTITY
+	# Initialize ship facing positive X axis for 0° yaw instead of default -Z axis
+	ship_basis = Basis.IDENTITY.rotated(Vector3.UP, -TAU/4)
+	# Reset angle tracking variables
+	current_pitch_rad = 0.0
+	current_yaw_rad = 0.0
 
 ## Get distance to reference origin
 func get_distance_to_origin() -> float:
