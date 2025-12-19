@@ -373,5 +373,3 @@ Godot Physics Frame (every ~16.67ms)
         ├─→ ship_position += ship_velocity * delta [line 117]
         ├─→ ship
 ```
-
-This formatted version ensures all ASCII art diagrams, flowcharts, and code snippets render correctly as fenced code blocks in **GitHub Flavored Markdown** (GFM). Tables are properly aligned, backticks in code cells are escaped where needed, and indentation is preserved for monospaced display. You can copy-paste this directly into a `README.md` or documentation file.
