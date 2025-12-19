@@ -1,12 +1,16 @@
-Godot Space Navigation Simulator - Technical Documentation
-Architecture Overview
-This is a retro terminal-style space navigation simulator built in Godot. The architecture follows a strict separation of concerns:
+# Godot Space Navigation Simulator - Technical Documentation
 
-main.gd: UI controller layer (no physics/math)
-navigationcomputer.gd: Physics/math engine (no UI code)
-main.tscn: Scene definition and UI layout
+## Architecture Overview
 
-Data Flow Diagram
+This retro terminal-style space navigation simulator is built in Godot. The architecture follows a strict separation of concerns:
+
+- **main.gd** — UI controller layer (no physics/math)
+- **navigationcomputer.gd** — Physics/math engine (no UI code)
+- **main.tscn** — Scene definition and UI layout
+
+## Data Flow Diagram
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         USER INPUT                               │
 │  (Buttons, Keyboard) → Main.gd Input Handlers                   │
@@ -35,10 +39,83 @@ Data Flow Diagram
 │  - Calls: nav_computer.get_terminal_readout()                   │
 │  - Updates: terminal_label.text                                 │
 └─────────────────────────────────────────────────────────────────┘
-File: main.gd (198 lines)
-Critical Line References
-LineContentDescription1## Main.gdFile header10##   5. Updates UI labels with formatted textArchitecture documentation25var nav_computer: Control = preload("res://navigationcomputer.gd").new()Navigation computer instantiation35@onready var terminal_label: Label = $TerminalDisplay/ScrollContainer/TerminalLabelTerminal display reference38@onready var thrust_label: Label = $ControlPanel/ThrustControls/ThrustLabelThrust label reference47var current_thrust: float = 0.0Current thrust percentage storage50var thrust_increment: float = 0.1Thrust increment per button click54var pitch_rate: float = 0.0Current pitch rotation rate59var yaw_rate: float = 0.0Current yaw rotation rate68func _ready() -> void:Initialization function71add_child(nav_computer)Adds nav computer to scene tree75_connect_buttons()Wire up button signals78update_thrust_display()Initialize thrust display82var timer = Timer.new()Create display update timer83timer.wait_time = 0.1Set to 10 Hz update rate84timer.timeout.connect(_update_terminal)Connect timer to update function90_update_terminal()Initial terminal update105func _connect_buttons() -> void:Button signal connection setup109$ControlPanel/ThrustControls/ThrustButtons/ThrustPlusButton.pressed.connect(_on_thrust_increase)Connect thrust + button110$ControlPanel/ThrustControls/ThrustButtons/ThrustMinusButton.pressed.connect(_on_thrust_decrease)Connect thrust - button116$ControlPanel/RotationControls/PitchControls/PitchUpButton.button_down.connect(func(): pitch_rate = 1.0)Pitch up button down117$ControlPanel/RotationControls/PitchControls/PitchUpButton.button_up.connect(func(): pitch_rate = 0.0)Pitch up button release120$ControlPanel/RotationControls/PitchControls/PitchDownButton.button_down.connect(func(): pitch_rate = -1.0)Pitch down button down121$ControlPanel/RotationControls/PitchControls/PitchDownButton.button_up.connect(func(): pitch_rate = 0.0)Pitch down button release126$ControlPanel/RotationControls/YawControls/YawLeftButton.button_down.connect(func(): yaw_rate = 1.0)Yaw left button down127$ControlPanel/RotationControls/YawControls/YawLeftButton.button_up.connect(func(): yaw_rate = 0.0)Yaw left button release130$ControlPanel/RotationControls/YawControls/YawRightButton.button_down.connect(func(): yaw_rate = -1.0)Yaw right button down131$ControlPanel/RotationControls/YawControls/YawRightButton.button_up.connect(func(): yaw_rate = 0.0)Yaw right button release135$ControlPanel/UtilityButtons/ResetButton.pressed.connect(_on_reset_pressed)Connect reset button136$ControlPanel/UtilityButtons/KillVelocityButton.pressed.connect(_on_kill_velocity)Connect kill velocity button152func _physics_process(delta: float) -> void:Physics frame update (60 Hz)156nav_computer.apply_thrust(current_thrust)Send thrust to nav computer161nav_computer.rotate_ship(pitch_rate, yaw_rate, delta)Send rotation to nav computer176func _update_terminal() -> void:Terminal display update (10 Hz)181terminal_label.text = nav_computer.get_terminal_readout()Get formatted data from nav computer189func _on_thrust_increase() -> void:Thrust increase handler190current_thrust = min(current_thrust + thrust_increment, 1.0)Increase thrust, clamped to 1.0191update_thrust_display()Update UI immediately197func _on_thrust_decrease() -> void:Thrust decrease handler198current_thrust = max(current_thrust - thrust_increment, 0.0)Decrease thrust, clamped to 0.0199update_thrust_display()Update UI immediately205func update_thrust_display() -> void:Thrust label update208thrust_label.text = "THRUST: %d%%" % (current_thrust * 100)Convert 0.0-1.0 to percentage219func _on_reset_pressed() -> void:Reset button handler222nav_computer.reset_ship()Reset physics state225current_thrust = 0.0Reset local thrust226pitch_rate = 0.0Reset local pitch rate227yaw_rate = 0.0Reset local yaw rate230update_thrust_display()Update UI to show 0%238func _on_kill_velocity() -> void:Kill velocity handler240nav_computer.ship_velocity = Vector3.ZEROEmergency stop258func _input(event: InputEvent) -> void:Keyboard input handler260if event is InputEventKey:Filter for keyboard events262if event.keycode == KEY_W and event.pressed:W key: increase thrust264elif event.keycode == KEY_S and event.pressed:S key: decrease thrust268if event.keycode == KEY_UP:UP arrow: pitch up269pitch_rate = 1.0 if event.pressed else 0.0Set pitch rate based on key state270elif event.keycode == KEY_DOWN:DOWN arrow: pitch down271pitch_rate = -1.0 if event.pressed else 0.0Set pitch rate based on key state274elif event.keycode == KEY_LEFT:LEFT arrow: yaw left275yaw_rate = 1.0 if event.pressed else 0.0Set yaw rate based on key state276elif event.keycode == KEY_RIGHT:RIGHT arrow: yaw right277yaw_rate = -1.0 if event.pressed else 0.0Set yaw rate based on key state280if event.keycode == KEY_R and event.pressed:R key: reset282elif event.keycode == KEY_X and event.pressed:X key: kill velocity
-Function Call Flow (main.gd)
+```
+
+## File: main.gd (198 lines)
+
+### Critical Line References
+
+| Line | Content | Description |
+|------|---------|-------------|
+| 1    | `## Main.gd` | File header |
+| 10   | `##   5. Updates UI labels with formatted text` | Architecture documentation |
+| 25   | `var nav_computer: Control = preload("res://navigationcomputer.gd").new()` | Navigation computer instantiation |
+| 35   | `@onready var terminal_label: Label = $TerminalDisplay/ScrollContainer/TerminalLabel` | Terminal display reference |
+| 38   | `@onready var thrust_label: Label = $ControlPanel/ThrustControls/ThrustLabel` | Thrust label reference |
+| 47   | `var current_thrust: float = 0.0` | Current thrust percentage storage |
+| 50   | `var thrust_increment: float = 0.1` | Thrust increment per button click |
+| 54   | `var pitch_rate: float = 0.0` | Current pitch rotation rate |
+| 59   | `var yaw_rate: float = 0.0` | Current yaw rotation rate |
+| 68   | `func _ready() -> void:` | Initialization function |
+| 71   | `add_child(nav_computer)` | Adds nav computer to scene tree |
+| 75   | `_connect_buttons()` | Wire up button signals |
+| 78   | `update_thrust_display()` | Initialize thrust display |
+| 82   | `var timer = Timer.new()` | Create display update timer |
+| 83   | `timer.wait_time = 0.1` | Set to 10 Hz update rate |
+| 84   | `timer.timeout.connect(_update_terminal)` | Connect timer to update function |
+| 90   | `_update_terminal()` | Initial terminal update |
+| 105  | `func _connect_buttons() -> void:` | Button signal connection setup |
+| 109  | `$ControlPanel/ThrustControls/ThrustButtons/ThrustPlusButton.pressed.connect(_on_thrust_increase)` | Connect thrust + button |
+| 110  | `$ControlPanel/ThrustControls/ThrustButtons/ThrustMinusButton.pressed.connect(_on_thrust_decrease)` | Connect thrust - button |
+| 116  | `$ControlPanel/RotationControls/PitchControls/PitchUpButton.button_down.connect(func(): pitch_rate = 1.0)` | Pitch up button down |
+| 117  | `$ControlPanel/RotationControls/PitchControls/PitchUpButton.button_up.connect(func(): pitch_rate = 0.0)` | Pitch up button release |
+| 120  | `$ControlPanel/RotationControls/PitchControls/PitchDownButton.button_down.connect(func(): pitch_rate = -1.0)` | Pitch down button down |
+| 121  | `$ControlPanel/RotationControls/PitchControls/PitchDownButton.button_up.connect(func(): pitch_rate = 0.0)` | Pitch down button release |
+| 126  | `$ControlPanel/RotationControls/YawControls/YawLeftButton.button_down.connect(func(): yaw_rate = 1.0)` | Yaw left button down |
+| 127  | `$ControlPanel/RotationControls/YawControls/YawLeftButton.button_up.connect(func(): yaw_rate = 0.0)` | Yaw left button release |
+| 130  | `$ControlPanel/RotationControls/YawControls/YawRightButton.button_down.connect(func(): yaw_rate = -1.0)` | Yaw right button down |
+| 131  | `$ControlPanel/RotationControls/YawControls/YawRightButton.button_up.connect(func(): yaw_rate = 0.0)` | Yaw right button release |
+| 135  | `$ControlPanel/UtilityButtons/ResetButton.pressed.connect(_on_reset_pressed)` | Connect reset button |
+| 136  | `$ControlPanel/UtilityButtons/KillVelocityButton.pressed.connect(_on_kill_velocity)` | Connect kill velocity button |
+| 152  | `func _physics_process(delta: float) -> void:` | Physics frame update (60 Hz) |
+| 156  | `nav_computer.apply_thrust(current_thrust)` | Send thrust to nav computer |
+| 161  | `nav_computer.rotate_ship(pitch_rate, yaw_rate, delta)` | Send rotation to nav computer |
+| 176  | `func _update_terminal() -> void:` | Terminal display update (10 Hz) |
+| 181  | `terminal_label.text = nav_computer.get_terminal_readout()` | Get formatted data from nav computer |
+| 189  | `func _on_thrust_increase() -> void:` | Thrust increase handler |
+| 190  | `current_thrust = min(current_thrust + thrust_increment, 1.0)` | Increase thrust, clamped to 1.0 |
+| 191  | `update_thrust_display()` | Update UI immediately |
+| 197  | `func _on_thrust_decrease() -> void:` | Thrust decrease handler |
+| 198  | `current_thrust = max(current_thrust - thrust_increment, 0.0)` | Decrease thrust, clamped to 0.0 |
+| 199  | `update_thrust_display()` | Update UI immediately |
+| 205  | `func update_thrust_display() -> void:` | Thrust label update |
+| 208  | `thrust_label.text = "THRUST: %d%%" % (current_thrust * 100)` | Convert 0.0-1.0 to percentage |
+| 219  | `func _on_reset_pressed() -> void:` | Reset button handler |
+| 222  | `nav_computer.reset_ship()` | Reset physics state |
+| 225  | `current_thrust = 0.0` | Reset local thrust |
+| 226  | `pitch_rate = 0.0` | Reset local pitch rate |
+| 227  | `yaw_rate = 0.0` | Reset local yaw rate |
+| 230  | `update_thrust_display()` | Update UI to show 0% |
+| 238  | `func _on_kill_velocity() -> void:` | Kill velocity handler |
+| 240  | `nav_computer.ship_velocity = Vector3.ZERO` | Emergency stop |
+| 258  | `func _input(event: InputEvent) -> void:` | Keyboard input handler |
+| 260  | `if event is InputEventKey:` | Filter for keyboard events |
+| 262  | `if event.keycode == KEY_W and event.pressed:` | W key: increase thrust |
+| 264  | `elif event.keycode == KEY_S and event.pressed:` | S key: decrease thrust |
+| 268  | `if event.keycode == KEY_UP:` | UP arrow: pitch up |
+| 269  | `pitch_rate = 1.0 if event.pressed else 0.0` | Set pitch rate based on key state |
+| 270  | `elif event.keycode == KEY_DOWN:` | DOWN arrow: pitch down |
+| 271  | `pitch_rate = -1.0 if event.pressed else 0.0` | Set pitch rate based on key state |
+| 274  | `elif event.keycode == KEY_LEFT:` | LEFT arrow: yaw left |
+| 275  | `yaw_rate = 1.0 if event.pressed else 0.0` | Set yaw rate based on key state |
+| 276  | `elif event.keycode == KEY_RIGHT:` | RIGHT arrow: yaw right |
+| 277  | `yaw_rate = -1.0 if event.pressed else 0.0` | Set yaw rate based on key state |
+| 280  | `if event.keycode == KEY_R and event.pressed:` | R key: reset |
+| 282  | `elif event.keycode == KEY_X and event.pressed:` | X key: kill velocity |
+
+### Function Call Flow (main.gd)
+
+```
 _ready() [line 68]
   ├─→ add_child(nav_computer) [line 71]
   ├─→ _connect_buttons() [line 75]
@@ -67,10 +144,125 @@ Button/Key Events ◄── Called when user interacts
   │     └─→ update_thrust_display() [line 230]
   ├─→ _on_kill_velocity() [line 238]
   └─→ _input(event) [line 258]
-File: navigationcomputer.gd (572 lines)
-Critical Line References
-LineContentDescription1## NavigationComputer.gdFile header10##   5. Display formatting (converting radians → degrees → 0-360° strings)Architecture documentation17##   +X = right, +Y = up, +Z = backward (so -Z = forward)Coordinate system definition35var ship_position: Vector3 = Vector3.ZEROShip position in meters40var ship_velocity: Vector3 = Vector3.ZEROShip velocity in m/s45var ship_acceleration: Vector3 = Vector3.ZEROShip acceleration in m/s²50var current_thrust_acceleration: float = 0.0Display thrust value62var pitch_angle: float = 0.0Pitch angle in radians73var yaw_angle: float = 0.0Yaw angle in radians81const REFERENCE_ORIGIN: Vector3 = Vector3.ZEROReference point for spherical coords89const MAX_THRUST_ACCELERATION: float = 10.0Maximum thrust in m/s²93const MAX_ROTATION_RATE: float = 0.5Maximum rotation rate in rad/s109func _physics_process(delta: float) -> void:Physics update (60 Hz)113ship_velocity += ship_acceleration * deltaApply acceleration to velocity117ship_position += ship_velocity * deltaApply velocity to position121ship_acceleration = Vector3.ZEROReset acceleration126current_thrust_acceleration = max(0.0, current_thrust_acceleration - MAX_THRUST_ACCELERATION * delta * 2.0)Decay display thrust143func apply_thrust(thrust_percentage: float) -> void:Apply main thrust145thrust_percentage = clamp(thrust_percentage, 0.0, 1.0)Clamp thrust to valid range149var thrust_direction = get_forward_vector()Get forward direction from angles153var thrust_magnitude = MAX_THRUST_ACCELERATION * thrust_percentageCalculate thrust magnitude156current_thrust_acceleration = thrust_magnitudeUpdate display value160ship_acceleration += thrust_direction * thrust_magnitudeApply acceleration170func apply_directional_thrust(direction: Vector3, thrust_percentage: float) -> void:Apply thrust in arbitrary direction197func rotate_ship(pitch: float, yaw: float, delta: float) -> void:Update ship orientation199pitch = clamp(pitch, -MAX_ROTATION_RATE, MAX_ROTATION_RATE)Clamp pitch rate200yaw = clamp(yaw, -MAX_ROTATION_RATE, MAX_ROTATION_RATE)Clamp yaw rate204if abs(pitch) > 0.001:Check pitch threshold205pitch_angle += pitch * deltaUpdate pitch angle210if abs(yaw) > 0.001:Check yaw threshold211yaw_angle += yaw * deltaUpdate yaw angle270func get_forward_vector() -> Vector3:Derive forward vector from angles273var forward = Vector3(Begin forward vector calculation274-sin(yaw_angle) * cos(pitch_angle),X component275sin(pitch_angle),Y component276-cos(yaw_angle) * cos(pitch_angle)Z component281return forward.normalized()Return normalized forward303func get_right_vector() -> Vector3:Derive right vector from yaw306return Vector3(Begin right vector calculation307cos(yaw_angle),X component3080.0,Y component (horizontal)309sin(yaw_angle)Z component318func get_up_vector() -> Vector3:Derive up vector from cross product320return get_right_vector().cross(get_forward_vector()).normalized()Cross product for up346func to_360_angle(angle: float) -> float:Convert angle to 0-360° range349return fposmod(angle, 360.0)Modulo operation for wrapping368func get_bearing_angles() -> Dictionary:Get pitch/yaw in degrees371var pitch_deg = rad_to_deg(pitch_angle)Convert pitch to degrees372var yaw_deg = rad_to_deg(yaw_angle)Convert yaw to degrees376"pitch": pitch_deg,Return pitch377"yaw": yaw_deg,Return yaw404func get_spherical_coordinates() -> Dictionary:Convert to spherical coords406var r = ship_position.length()Calculate distance409if r < 0.001:Handle origin case418var azimuth_rad = atan2(ship_position.z, ship_position.x)Calculate azimuth419var azimuth_deg = rad_to_deg(azimuth_rad)Convert to degrees424var elevation_rad = asin(clamp(ship_position.y / r, -1.0, 1.0))Calculate elevation425var elevation_deg = rad_to_deg(elevation_rad)Convert to degrees428"distance": r,Return distance429"azimuth": azimuth_deg,Return azimuth430"elevation": elevation_degReturn elevation453func get_terminal_readout() -> String:Format terminal display455var spherical = get_spherical_coordinates()Get spherical coords456var bearing = get_bearing_angles()Get bearing angles457var forward = get_forward_vector()Get forward vector460var output = ""Initialize output string463output += "╔═══════════════════════════════════╗\n"Header box468output += "POSITION [CARTESIAN] (km):\n"Cartesian position section469output += "  X: %+10.2f\n" % (ship_position.x / 1000.0)X position in km470output += "  Y: %+10.2f\n" % (ship_position.y / 1000.0)Y position in km471output += "  Z: %+10.2f\n\n" % (ship_position.z / 1000.0)Z position in km475output += "POSITION [SPHERICAL]:\n"Spherical position section476output += "  DIST: %10.2f km\n" % (spherical.distance / 1000.0)Distance in km477output += "  AZI:  %10.2f°\n" % to_360_angle(spherical.azimuth)Azimuth 0-360°478output += "  ELEV: %+10.2f°\n\n" % spherical.elevationElevation -90 to +90481output += "VELOCITY (m/s):\n"Velocity section482output += "  MAG:  %10.2f\n" % ship_velocity.length()Velocity magnitude483output += "  X:    %+10.2f\n" % ship_velocity.xX velocity484output += "  Y:    %+10.2f\n" % ship_velocity.yY velocity485output += "  Z:    %+10.2f\n\n" % ship_velocity.zZ velocity488output += "BEARING:\n"Bearing section489output += "  PITCH:  %9.2f°\n" % to_360_angle(bearing.pitch)Pitch 0-360°490output += "  YAW:    %9.2f°\n\n" % to_360_angle(bearing.yaw)Yaw 0-360°493output += "THRUST VECTOR:\n"Thrust section494output += "  FWD: [%.3f, %.3f, %.3f]\n" % [forward.x, forward.y, forward.z]Forward vector495output += "  ACC:  %10.2f m/s²\n" % current_thrust_accelerationAcceleration498output += "\n───────────────────────────────────\n"Footer500return outputReturn formatted string511func get_compact_status() -> String:Compact status string513var dist = ship_position.length() / 1000.0Calculate distance514var vel = ship_velocity.length()Calculate velocity515var bearing = get_bearing_angles()Get bearing518`return "DIST: %.1fkmVEL: %.1fm/s519dist, vel,Distance and velocity520to_360_angle(bearing.pitch),Pitch 0-360°521to_360_angle(bearing.yaw)Yaw 0-360°540func reset_ship() -> void:Reset all state542ship_position = Vector3.ZEROReset position543ship_velocity = Vector3.ZEROReset velocity544ship_acceleration = Vector3.ZEROReset acceleration545current_thrust_acceleration = 0.0Reset thrust display548pitch_angle = 0.0Reset pitch549yaw_angle = 0.0Reset yaw557func get_distance_to_origin() -> float:Get distance helper558return ship_position.length()Return distance570func is_within_radius(radius: float) -> bool:Check proximity571return ship_position.length() <= radiusReturn comparison
-Function Call Flow (navigationcomputer.gd)
+```
+
+## File: navigationcomputer.gd (572 lines)
+
+### Critical Line References
+
+| Line | Content | Description |
+|------|---------|-------------|
+| 1    | `## NavigationComputer.gd` | File header |
+| 10   | `##   5. Display formatting (converting radians → degrees → 0-360° strings)` | Architecture documentation |
+| 17   | `##   +X = right, +Y = up, +Z = backward (so -Z = forward)` | Coordinate system definition |
+| 35   | `var ship_position: Vector3 = Vector3.ZERO` | Ship position in meters |
+| 40   | `var ship_velocity: Vector3 = Vector3.ZERO` | Ship velocity in m/s |
+| 45   | `var ship_acceleration: Vector3 = Vector3.ZERO` | Ship acceleration in m/s² |
+| 50   | `var current_thrust_acceleration: float = 0.0` | Display thrust value |
+| 62   | `var pitch_angle: float = 0.0` | Pitch angle in radians |
+| 73   | `var yaw_angle: float = 0.0` | Yaw angle in radians |
+| 81   | `const REFERENCE_ORIGIN: Vector3 = Vector3.ZERO` | Reference point for spherical coords |
+| 89   | `const MAX_THRUST_ACCELERATION: float = 10.0` | Maximum thrust in m/s² |
+| 93   | `const MAX_ROTATION_RATE: float = 0.5` | Maximum rotation rate in rad/s |
+| 109  | `func _physics_process(delta: float) -> void:` | Physics update (60 Hz) |
+| 113  | `ship_velocity += ship_acceleration * delta` | Apply acceleration to velocity |
+| 117  | `ship_position += ship_velocity * delta` | Apply velocity to position |
+| 121  | `ship_acceleration = Vector3.ZERO` | Reset acceleration |
+| 126  | `current_thrust_acceleration = max(0.0, current_thrust_acceleration - MAX_THRUST_ACCELERATION * delta * 2.0)` | Decay display thrust |
+| 143  | `func apply_thrust(thrust_percentage: float) -> void:` | Apply main thrust |
+| 145  | `thrust_percentage = clamp(thrust_percentage, 0.0, 1.0)` | Clamp thrust to valid range |
+| 149  | `var thrust_direction = get_forward_vector()` | Get forward direction from angles |
+| 153  | `var thrust_magnitude = MAX_THRUST_ACCELERATION * thrust_percentage` | Calculate thrust magnitude |
+| 156  | `current_thrust_acceleration = thrust_magnitude` | Update display value |
+| 160  | `ship_acceleration += thrust_direction * thrust_magnitude` | Apply acceleration |
+| 170  | `func apply_directional_thrust(direction: Vector3, thrust_percentage: float) -> void:` | Apply thrust in arbitrary direction |
+| 197  | `func rotate_ship(pitch: float, yaw: float, delta: float) -> void:` | Update ship orientation |
+| 199  | `pitch = clamp(pitch, -MAX_ROTATION_RATE, MAX_ROTATION_RATE)` | Clamp pitch rate |
+| 200  | `yaw = clamp(yaw, -MAX_ROTATION_RATE, MAX_ROTATION_RATE)` | Clamp yaw rate |
+| 204  | `if abs(pitch) > 0.001:` | Check pitch threshold |
+| 205  | `pitch_angle += pitch * delta` | Update pitch angle |
+| 210  | `if abs(yaw) > 0.001:` | Check yaw threshold |
+| 211  | `yaw_angle += yaw * delta` | Update yaw angle |
+| 270  | `func get_forward_vector() -> Vector3:` | Derive forward vector from angles |
+| 273  | `var forward = Vector3(` | Begin forward vector calculation |
+| 274  | `-sin(yaw_angle) * cos(pitch_angle),` | X component |
+| 275  | `sin(pitch_angle),` | Y component |
+| 276  | `-cos(yaw_angle) * cos(pitch_angle)` | Z component |
+| 281  | `return forward.normalized()` | Return normalized forward |
+| 303  | `func get_right_vector() -> Vector3:` | Derive right vector from yaw |
+| 306  | `return Vector3(` | Begin right vector calculation |
+| 307  | `cos(yaw_angle),` | X component |
+| 308  | `0.0,` | Y component (horizontal) |
+| 309  | `sin(yaw_angle)` | Z component |
+| 318  | `func get_up_vector() -> Vector3:` | Derive up vector from cross product |
+| 320  | `return get_right_vector().cross(get_forward_vector()).normalized()` | Cross product for up |
+| 346  | `func to_360_angle(angle: float) -> float:` | Convert angle to 0-360° range |
+| 349  | `return fposmod(angle, 360.0)` | Modulo operation for wrapping |
+| 368  | `func get_bearing_angles() -> Dictionary:` | Get pitch/yaw in degrees |
+| 371  | `var pitch_deg = rad_to_deg(pitch_angle)` | Convert pitch to degrees |
+| 372  | `var yaw_deg = rad_to_deg(yaw_angle)` | Convert yaw to degrees |
+| 376  | `"pitch": pitch_deg,` | Return pitch |
+| 377  | `"yaw": yaw_deg,` | Return yaw |
+| 404  | `func get_spherical_coordinates() -> Dictionary:` | Convert to spherical coords |
+| 406  | `var r = ship_position.length()` | Calculate distance |
+| 409  | `if r < 0.001:` | Handle origin case |
+| 418  | `var azimuth_rad = atan2(ship_position.z, ship_position.x)` | Calculate azimuth |
+| 419  | `var azimuth_deg = rad_to_deg(azimuth_rad)` | Convert to degrees |
+| 424  | `var elevation_rad = asin(clamp(ship_position.y / r, -1.0, 1.0))` | Calculate elevation |
+| 425  | `var elevation_deg = rad_to_deg(elevation_rad)` | Convert to degrees |
+| 428  | `"distance": r,` | Return distance |
+| 429  | `"azimuth": azimuth_deg,` | Return azimuth |
+| 430  | `"elevation": elevation_deg` | Return elevation |
+| 453  | `func get_terminal_readout() -> String:` | Format terminal display |
+| 455  | `var spherical = get_spherical_coordinates()` | Get spherical coords |
+| 456  | `var bearing = get_bearing_angles()` | Get bearing angles |
+| 457  | `var forward = get_forward_vector()` | Get forward vector |
+| 460  | `var output = ""` | Initialize output string |
+| 463  | `output += "╔═══════════════════════════════════╗\n"` | Header box |
+| 468  | `output += "POSITION [CARTESIAN] (km):\n"` | Cartesian position section |
+| 469  | `output += "  X: %+10.2f\n" % (ship_position.x / 1000.0)` | X position in km |
+| 470  | `output += "  Y: %+10.2f\n" % (ship_position.y / 1000.0)` | Y position in km |
+| 471  | `output += "  Z: %+10.2f\n\n" % (ship_position.z / 1000.0)` | Z position in km |
+| 475  | `output += "POSITION [SPHERICAL]:\n"` | Spherical position section |
+| 476  | `output += "  DIST: %10.2f km\n" % (spherical.distance / 1000.0)` | Distance in km |
+| 477  | `output += "  AZI:  %10.2f°\n" % to_360_angle(spherical.azimuth)` | Azimuth 0-360° |
+| 478  | `output += "  ELEV: %+10.2f°\n\n" % spherical.elevation` | Elevation -90 to +90 |
+| 481  | `output += "VELOCITY (m/s):\n"` | Velocity section |
+| 482  | `output += "  MAG:  %10.2f\n" % ship_velocity.length()` | Velocity magnitude |
+| 483  | `output += "  X:    %+10.2f\n" % ship_velocity.x` | X velocity |
+| 484  | `output += "  Y:    %+10.2f\n" % ship_velocity.y` | Y velocity |
+| 485  | `output += "  Z:    %+10.2f\n\n" % ship_velocity.z` | Z velocity |
+| 488  | `output += "BEARING:\n"` | Bearing section |
+| 489  | `output += "  PITCH:  %9.2f°\n" % to_360_angle(bearing.pitch)` | Pitch 0-360° |
+| 490  | `output += "  YAW:    %9.2f°\n\n" % to_360_angle(bearing.yaw)` | Yaw 0-360° |
+| 493  | `output += "THRUST VECTOR:\n"` | Thrust section |
+| 494  | `output += "  FWD: [%.3f, %.3f, %.3f]\n" % [forward.x, forward.y, forward.z]` | Forward vector |
+| 495  | `output += "  ACC:  %10.2f m/s²\n" % current_thrust_acceleration` | Acceleration |
+| 498  | `output += "\n───────────────────────────────────\n"` | Footer |
+| 500  | `return output` | Return formatted string |
+| 511  | `func get_compact_status() -> String:` | Compact status string |
+| 513  | `var dist = ship_position.length() / 1000.0` | Calculate distance |
+| 514  | `var vel = ship_velocity.length()` | Calculate velocity |
+| 515  | `var bearing = get_bearing_angles()` | Get bearing |
+| 518  | `return "DIST: %.1fkm | VEL: %.1fm/s | P:%.0f° Y:%.0f°" % [` | Format compact string |
+| 519  | `dist, vel,` | Distance and velocity |
+| 520  | `to_360_angle(bearing.pitch),` | Pitch 0-360° |
+| 521  | `to_360_angle(bearing.yaw)` | Yaw 0-360° |
+| 540  | `func reset_ship() -> void:` | Reset all state |
+| 542  | `ship_position = Vector3.ZERO` | Reset position |
+| 543  | `ship_velocity = Vector3.ZERO` | Reset velocity |
+| 544  | `ship_acceleration = Vector3.ZERO` | Reset acceleration |
+| 545  | `current_thrust_acceleration = 0.0` | Reset thrust display |
+| 548  | `pitch_angle = 0.0` | Reset pitch |
+| 549  | `yaw_angle = 0.0` | Reset yaw |
+| 557  | `func get_distance_to_origin() -> float:` | Get distance helper |
+| 558  | `return ship_position.length()` | Return distance |
+| 570  | `func is_within_radius(radius: float) -> bool:` | Check proximity |
+| 571  | `return ship_position.length() <= radius` | Return comparison |
+
+### Function Call Flow (navigationcomputer.gd)
+
+```
 _physics_process(delta) [line 109] ◄── Called 60 times/second by Godot
   ├─→ ship_velocity += ship_acceleration * delta [line 113]
   ├─→ ship_position += ship_velocity * delta [line 117]
@@ -141,8 +333,13 @@ reset_ship() [line 540] ◄── Called from main.gd line 222
   ├─→ current_thrust_acceleration = 0.0 [line 545]
   ├─→ pitch_angle = 0.0 [line 548]
   └─→ yaw_angle = 0.0 [line 549]
-Complete System Loop
-Initialization Phase
+```
+
+## Complete System Loop
+
+### Initialization Phase
+
+```
 Godot Engine Starts
   └─→ main.tscn loads
        └─→ main.gd _ready() [line 68]
@@ -154,8 +351,13 @@ Godot Engine Starts
              ├─→ Timer setup for 10 Hz updates [lines 82-86]
              └─→ _update_terminal() first call [line 90]
                   └─→ nav_computer.get_terminal_readout() [line 181]
-Runtime Loop (Every Frame)
-Physics Update (60 Hz)
+```
+
+### Runtime Loop (Every Frame)
+
+#### Physics Update (60 Hz)
+
+```
 Godot Physics Frame (every ~16.67ms)
   ├─→ main.gd _physics_process(delta) [line 152]
   │     ├─→ nav_computer.apply_thrust(current_thrust) [line 156]
@@ -170,3 +372,6 @@ Godot Physics Frame (every ~16.67ms)
         ├─→ ship_velocity += ship_acceleration * delta [line 113]
         ├─→ ship_position += ship_velocity * delta [line 117]
         ├─→ ship
+```
+
+This formatted version ensures all ASCII art diagrams, flowcharts, and code snippets render correctly as fenced code blocks in **GitHub Flavored Markdown** (GFM). Tables are properly aligned, backticks in code cells are escaped where needed, and indentation is preserved for monospaced display. You can copy-paste this directly into a `README.md` or documentation file.
